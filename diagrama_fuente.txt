@@ -1,0 +1,181 @@
+Table viveros {
+  ~auto_id
+  ~localizacion
+}
+
+Table zonas {
+  ~auto_id
+  id_vivero int [not null]
+  nombre varchar(50) [not null]
+  ~localizacion
+
+  indexes {
+    (id_vivero, nombre) [unique]
+  }
+}
+
+Ref: zonas.id_vivero > viveros.id
+
+Table empleados {
+  ~auto_id
+  dni varchar(9) [not null, unique]
+  nombre varchar(50) [not null]
+  apellido varchar(50) [not null]
+  nacimiento date [not null]
+}
+
+Table puestos {
+  ~auto_id
+  id_vivero int [not null]
+  nombre varchar(50) [not null]
+  descripcion varchar(1024) [not null]
+}
+
+Ref: puestos.id_vivero > viveros.id
+
+Table asignaciones {
+  ~auto_id
+  id_puesto int [not null]
+  id_empleado int [not null]
+  ~periodo
+}
+
+Ref: asignaciones.id_puesto > puestos.id
+Ref: asignaciones.id_empleado > empleados.id
+
+Table tareas {
+  ~auto_id
+  id_empleado int [not null]
+  id_zona int [not null]
+  ~periodo
+}
+
+Ref: tareas.id_empleado > empleados.id
+Ref: tareas.id_zona > zonas.id
+
+Table productos {
+  codigo_de_barras varchar(20) [pk]
+  precio decimal(10,2) [not null]
+
+  nombre varchar(50) [not null]
+
+  checks {
+    `precio >= 0`
+  }
+}
+
+Table stock {
+  id_zona int [not null]
+  codigo_producto varchar(20) [not null]
+  cantidad int [not null]
+
+  indexes {
+    (id_zona, codigo_producto) [pk]
+  }
+
+  checks {
+    `cantidad >= 0`
+  }
+}
+
+Ref: stock.id_zona > zonas.id
+Ref: stock.codigo_producto > productos.codigo_de_barras
+
+Table clientes {
+  ~auto_id
+  nombre varchar(50) [not null]
+  apellido varchar(50)
+}
+
+Table clientes_correos {
+  id_cliente int [not null]
+  correo varchar(255) [not null]
+
+  indexes {
+    (id_cliente, correo) [pk]
+  }
+}
+
+Ref: clientes_correos.id_cliente > clientes.id
+
+Table tajinaste_plus {
+  id_cliente int [pk]
+  ~periodo
+}
+
+Ref: tajinaste_plus.id_cliente - clientes.id
+
+Table pedidos {
+  ~auto_id
+  fecha datetime [not null, default: `now()`]
+  id_empleado int [not null]
+  id_cliente int [not null]
+}
+
+Ref: pedidos.id_empleado > empleados.id
+Ref: pedidos.id_cliente > clientes.id
+
+Table pedidos_contenido {
+  id_pedido int [not null]
+  id_producto varchar(20) [not null]
+  cantidad int [not null]
+  precio_unitario decimal(10,2) [not null]
+
+  indexes {
+    (id_pedido, id_producto) [pk]
+  }
+
+  checks {
+    `cantidad > 0`
+    `precio_unitario >= 0`
+  }
+}
+
+Ref: pedidos_contenido.id_pedido > pedidos.id
+Ref: pedidos_contenido.id_producto > productos.codigo_de_barras
+
+Table bonificaciones {
+  ~auto_id
+  id_cliente int [not null]
+  id_producto varchar(20) [not null]
+  mes_referencia date [not null]
+  descuento decimal(5,2) [not null]
+  valido_desde datetime [not null]
+  valido_hasta datetime [not null]
+
+  indexes {
+    (id_cliente, id_producto, mes_referencia) [unique]
+  }
+
+  checks {
+    `descuento >= 0 AND descuento <= 100`
+    `valido_hasta >= valido_desde`
+  }
+}
+
+Ref: bonificaciones.id_cliente > tajinaste_plus.id_cliente
+Ref: bonificaciones.id_producto > productos.codigo_de_barras
+
+TablePartial periodo {
+  inicio datetime [not null]
+  fin datetime
+
+  checks {
+    `fin IS NULL OR fin > inicio`
+  }
+}
+
+TablePartial localizacion {
+  longitud decimal [not null]
+  latitud decimal [not null]
+
+  checks {
+    `latitud BETWEEN -90 AND 90`
+    `longitud BETWEEN -180 AND 180`
+  }
+
+}
+
+TablePartial auto_id {
+  id int [pk, increment]
+}
