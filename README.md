@@ -1,4 +1,4 @@
-# Práctica 4: Base de datos de viveros
+# Práctica 3: Base de datos de viveros
 
 Diseño e implementación en PostgreSQL del modelo relacional de Tajinaste S.A.
 Incluye tablas, claves y restricciones de integridad, datos de prueba, vistas para
